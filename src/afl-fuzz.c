@@ -1352,6 +1352,7 @@ int main(int argc, char **argv_orig, char **envp) {
             case 0:
               afl->expand_havoc = 1;
               break;
+/*
             case 1:
               if (afl->limit_time_sig == 0 && !afl->custom_only &&
                   !afl->python_only) {
@@ -1368,6 +1369,8 @@ int main(int argc, char **argv_orig, char **envp) {
               afl->expand_havoc = 3;
               break;
             case 3:
+*/
+            default:
               // nothing else currently
               break;
 
