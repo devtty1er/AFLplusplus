@@ -2604,12 +2604,21 @@ void check_binary(afl_state_t *afl, u8 *fname) {
 
   }
 
-  /* Detect persistent & deferred init signatures in the binary. */
+  /* Detect persistent, deferred init, and continuous mode signatures in the binary. */
 
   if (memmem(f_data, f_len, PERSIST_SIG, strlen(PERSIST_SIG) + 1)) {
 
     OKF(cPIN "Persistent mode binary detected.");
     setenv(PERSIST_ENV_VAR, "1", 1);
+    afl->persistent_mode = 1;
+
+    afl->shmem_testcase_mode = 1;
+
+  } else if (memmem(f_data, f_len, CONT_SIG, strlen(CONT_SIG) + 1)) {
+
+    OKF(cPIN "Continuous mode binary detected.");
+    setenv(PERSIST_ENV_VAR, "1", 1);
+    setenv(CONT_ENV_VAR, "1", 1);
     afl->persistent_mode = 1;
 
     afl->shmem_testcase_mode = 1;

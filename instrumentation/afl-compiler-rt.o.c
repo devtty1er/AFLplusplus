@@ -104,6 +104,7 @@ struct cmp_map *__afl_cmp_map;
 /* Running in persistent mode? */
 
 static u8 is_persistent;
+static u8 is_continuous;
 
 /* Are we in sancov mode? */
 
@@ -435,6 +436,7 @@ static void __afl_start_snapshots(void) {
   s32       child_pid;
   u32       status = 0;
   u32       already_read_first = 0;
+  s32       read_value;
   u32       was_killed;
 
   u8 child_stopped = 0;
@@ -455,7 +457,12 @@ static void __afl_start_snapshots(void) {
 
   if (__afl_sharedmem_fuzzing || (__afl_dictionary_len && __afl_dictionary)) {
 
-    if (read(FORKSRV_FD, &was_killed, 4) != 4) _exit(1);
+    if (read(FORKSRV_FD, &read_value, 4) != 4) _exit(1);
+    if (read_value > 0) {
+      was_killed = 1;
+    } else {
+      was_killed = 0;
+    }
 
     if (getenv("AFL_DEBUG")) {
 
@@ -524,7 +531,12 @@ static void __afl_start_snapshots(void) {
     } else {
 
       /* Wait for parent by reading from the pipe. Abort if read fails. */
-      if (read(FORKSRV_FD, &was_killed, 4) != 4) _exit(1);
+      if (read(FORKSRV_FD, &read_value, 4) != 4) _exit(1);
+      if (read_value > 0) {
+        was_killed = 1;
+      } else {
+        was_killed = 0;
+      }
 
     }
 
@@ -601,7 +613,7 @@ static void __afl_start_snapshots(void) {
 
       /* Special handling for persistent mode: if the child is alive but
          currently stopped, simply restart it with SIGCONT. */
-
+      // TODO: Continuous mode again inside this ifdef
       kill(child_pid, SIGCONT);
       child_stopped = 0;
 
@@ -668,7 +680,12 @@ static void __afl_start_forkserver(void) {
 
   if (__afl_sharedmem_fuzzing || (__afl_dictionary_len && __afl_dictionary)) {
 
-    if (read(FORKSRV_FD, &was_killed, 4) != 4) _exit(1);
+    if (read(FORKSRV_FD, &read_value, 4) != 4) _exit(1);
+    if (read_value > 0) {
+      was_killed = 1;
+    } else {
+      was_killed = 0;
+    }
 
     if (getenv("AFL_DEBUG")) {
 
@@ -738,7 +755,12 @@ static void __afl_start_forkserver(void) {
 
     } else {
 
-      if (read(FORKSRV_FD, &was_killed, 4) != 4) _exit(1);
+      if (read(FORKSRV_FD, &read_value, 4) != 4) _exit(1);
+      if (read_value > 0) {
+        was_killed = 1;
+      } else {
+        was_killed = 0;
+      }
 
     }
 
@@ -801,6 +823,17 @@ static void __afl_start_forkserver(void) {
       }
 
     } else {
+
+      /* Special handling for continuous mode: TODO */
+        // See https://github.com/malteklaassen/bachelor/blob/b0914337688f2bcfab468d3d6acc3263d7533322/fuzzing/afl/test.c
+
+      if (is_continuous) {
+        if (read_value < 0) {
+          snapshot()
+        } else {
+          // 1/10 restore from random snapshot
+        }
+      }
 
       /* Special handling for persistent mode: if the child is alive but
          currently stopped, simply restart it with SIGCONT. */
@@ -934,6 +967,7 @@ __attribute__((constructor())) void __afl_auto_init(void) {
 __attribute__((constructor(CTOR_PRIO))) void __afl_auto_early(void) {
 
   is_persistent = !!getenv(PERSIST_ENV_VAR);
+  is_continuous = !!getenv(CONT_ENV_VAR);
 
   if (getenv("AFL_DISABLE_LLVM_INSTRUMENTATION")) return;
 

@@ -715,6 +715,20 @@ static void edit_params(u32 argc, char **argv, char **envp) {
       "? 0 : *__afl_fuzz_len)";
 
   cc_params[cc_par_cnt++] =
+      "-D__AFL_WHILE(_A)="
+      "({ static volatile char *_B __attribute__((used)); "
+      " _B = (char*)\"" CONT_SIG
+      "\"; "
+#ifdef __APPLE__
+      "__attribute__((visibility(\"default\"))) "
+      "int _L(unsigned int) __asm__(\"___afl_persistent_loop\"); "
+#else
+      "__attribute__((visibility(\"default\"))) "
+      "int _L(unsigned int) __asm__(\"__afl_persistent_loop\"); "
+#endif                                                        /* ^__APPLE__ */
+      "_L(_A); })";
+
+  cc_params[cc_par_cnt++] =
       "-D__AFL_LOOP(_A)="
       "({ static volatile char *_B __attribute__((used)); "
       " _B = (char*)\"" PERSIST_SIG

@@ -313,10 +313,12 @@
 #define CLANG_ENV_VAR "__AFL_CLANG_MODE"
 #define AS_LOOP_ENV_VAR "__AFL_AS_LOOPCHECK"
 #define PERSIST_ENV_VAR "__AFL_PERSISTENT"
+#define CONT_ENV_VAR "__AFL_CONTINUOUS"
 #define DEFER_ENV_VAR "__AFL_DEFER_FORKSRV"
 
-/* In-code signatures for deferred and persistent mode. */
+/* In-code signatures for deferred, persistent, and continuous mode. */
 
+#define CONT_SIG "##SIG_AFL_CONTINUOUS##"
 #define PERSIST_SIG "##SIG_AFL_PERSISTENT##"
 #define DEFER_SIG "##SIG_AFL_DEFER_FORKSRV##"
 

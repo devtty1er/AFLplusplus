@@ -1014,7 +1014,11 @@ fsrv_run_result_t afl_fsrv_run_target(afl_forkserver_t *fsrv, u32 timeout,
 
   s32 res;
   u32 exec_ms;
-  u32 write_value = fsrv->last_run_timed_out;
+  s32 write_value = (s32) fsrv->last_run_timed_out;
+
+  if (!write_value && fsrv->last_run_interesting) {
+    write_value = -1;
+  }
 
   /* After this memset, fsrv->trace_bits[] are effectively volatile, so we
      must prevent any earlier operations from venturing into that
